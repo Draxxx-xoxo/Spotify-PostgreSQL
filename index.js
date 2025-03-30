@@ -1,5 +1,5 @@
 require('dotenv').config();
-const json = require("")
+const json = require("./json/")
 const fs = require("fs")
 const {Client} = require("pg");
 
