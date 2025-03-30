@@ -1,27 +1,45 @@
 <?php
-// Connecting, selecting database
-$dbconn = pg_connect("host=localhost dbname=spotify user=jovan_wee password=b747400s port=5432")
-    or die('Could not connect: ' . pg_last_error());
+header("Content-Type: application/json");
+require "config.php"; // Include database connection
 
-// Performing SQL query
-$query = "SELECT track_name FROM public.songs";
-$result = pg_query($dbconn, $query) or die('Query failed: ' . pg_last_error());
+$query = "SELECT * FROM songs WHERE 1=1";
+$params = [];
 
-// Printing results in HTML
-echo "<table>\n";
-while ($line = pg_fetch_array($result, null, PGSQL_ASSOC)) {
-    echo "\t<tr>\n";
-    foreach ($line as $col_value) {
-        echo "\t\t<td>$col_value</td>\n";
-    }
-    echo "\t</tr>\n";
+// Check if search parameters exist
+if (!empty($_GET['track_name'])) {
+    $query .= " AND track_name ILIKE ?";
+    $params[] = "%" . $_GET['track_name'] . "%";
 }
-echo "</table>\n";
 
+if (!empty($_GET['artist_name'])) {
+    $query .= " AND artist_name ILIKE ?";
+    $params[] = "%" . $_GET['artist_name'] . "%";
+}
 
-// Free resultset
-pg_free_result($result);
+if (!empty($_GET['album_name'])) {
+    $query .= " AND album_name ILIKE ?";
+    $params[] = "%" . $_GET['album_name'] . "%";
+}
 
-// Closing connection
-pg_close($dbconn);
+if (!empty($_GET['conn_country'])) {
+    $query .= " AND conn_country = ?";
+    $params[] = $_GET['conn_country'];
+}
+
+if (!empty($_GET['platform'])) {
+    $query .= " AND platform = ?";
+    $params[] = $_GET['platform'];
+}
+
+if (!empty($_GET['timestamp'])) {
+    $query .= " AND timestamp = ?";
+    $params[] = $_GET['timestamp'];
+}
+
+$stmt = $pdo->prepare($query);
+$stmt->execute($params);
+$data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Return JSON response
+echo json_encode($data);
 ?>
